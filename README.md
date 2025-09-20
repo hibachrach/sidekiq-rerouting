@@ -58,6 +58,13 @@ Clearing all reroutes marks can be done in one fell swoop as well.
 client.remove_rerouting_for_all
 ```
 
+### Non-Reroutable Jobs
+
+By default all Jobs are reroutable.
+However, checking if a specific Job should be rerouted is not free; it requires round trip(s) to Redis.
+Therefore, you might want to make some Jobs non-reroutable to avoid these extra round trips.
+Or because there are some Jobs that simply should never be rerouted for… _reasons_.
+
 
 ## Development
 
