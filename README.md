@@ -56,13 +56,37 @@ Clearing all reroutes marks can be done in one fell swoop as well.
 client.remove_rerouting_for_all
 ```
 
+## Configuration
+
+With `sidekiq-rerouting` installed, [register its Sidekiq server middleware][sidekiq-register-middleware].
+Typically this is done via `config/initializers/sidekiq.rb` in a Rails app.
+
+```ruby
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add Sidekiq::Rerouting::ServerMiddleware
+  end
+end
+```
+
+This piece of middleware checks each job, after it's been dequeued, but before its `#perform` has been called, to see if it should be rerouted.
+If the job is marked for rerouting (by job ID or job class), a new job (with the same job ID) is enqueued into the intended destination and the current job exits early.
+
 ### Non-Reroutable Jobs
 
 By default all Jobs are reroutable.
-However, checking if a specific Job should be rerouted is not free; it requires round trip(s) to Redis.
-Therefore, you might want to make some Jobs non-reroutable to avoid these extra round trips.
+However, checking if a specific job should be rerouted is not free; it requires round trip(s) to Redis.
+Therefore, you might want to make some jobs non-reroutable to avoid these extra round trips.
 Or because there are some Jobs that simply should never be rerouted for… _reasons_.
 
+This is done via a job's `sidekiq_options`.
+
+```ruby
+sidekiq_options reroutable: false
+```
+
+With that in place, the server middleware will ignore the Job, and pass it down the middleware Chain.
+No extra Redis calls, no funny business.
 
 ## Development
 
@@ -82,4 +106,10 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 Everyone interacting in the Sidekiq::Rerouting project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/hibachrach/sidekiq-rerouting/blob/main/CODE_OF_CONDUCT.md).
 
+## See Also
+
+- [`sidekiq-disposal`][sidekiq-disposal]
+
 [sidekiq]: https://sidekiq.org "Simple, efficient background jobs for Ruby."
+[sidekiq-disposal]: https://github.com/hibachrach/sidekiq-disposal "A Sidekiq extension to mark Sidekiq jobs to be disposed of."
+[sidekiq-register-middleware]: https://github.com/sidekiq/sidekiq/wiki/Middleware#registering-middleware "Registering Sidekiq Middleware"
