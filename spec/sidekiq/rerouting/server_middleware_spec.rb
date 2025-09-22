@@ -9,7 +9,7 @@ module Sidekiq
   module Rerouting
     RSpec.describe ServerMiddleware, :with_test_redis do
       subject(:middleware) do
-        described_class.new(&on_reroute).tap { |m| m.config = ::Sidekiq.default_configuration }
+        described_class.new(on_reroute:).tap { |m| m.config = ::Sidekiq.default_configuration }
       end
 
       let(:client) { Client.new }

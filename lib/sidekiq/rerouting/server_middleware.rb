@@ -8,9 +8,9 @@ module Sidekiq
     class ServerMiddleware
       include ::Sidekiq::ServerMiddleware
 
-      def initialize(client = Client.new, &blk)
-        @client = client
-        @on_reroute = blk
+      def initialize(opts = {})
+        @client = opts.fetch(:client, Client.new)
+        @on_reroute = opts.fetch(:on_reroute, nil)
       end
 
       def call(job_instance, job, queue)

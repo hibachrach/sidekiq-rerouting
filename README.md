@@ -72,6 +72,26 @@ end
 This piece of middleware checks each job, after it's been dequeued, but before its `#perform` has been called, to see if it should be rerouted.
 If the job is marked for rerouting (by job ID or job class), a new job (with the same job ID) is enqueued into the intended destination and the current job exits early.
 
+### Callback
+
+If you'd like to do something when a job is rerouted,
+you can optionally pass in an object that responds to `.call` (like a `Proc`) when adding the middleware:
+
+```ruby
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add(Sidekiq::Rerouting::ServerMiddleware, on_reroute: -> { |job:, old_queue:, new_queue:|
+      puts "Job with jid=#{job["jid"]} was rerouted from #{old_queue} to #{new_queue}"
+    })
+  end
+end
+```
+
+It yields the following keyword arguments:
+* `job`: the serialized job that is being rerouted; see [Sidekiq's docs][job-format] for more details.
+* `old_queue`: the queue *from which* the job is being rerouted.
+* `new_queue`: the queue *to which* the job is being rerouted.
+
 ### Non-Reroutable Jobs
 
 By default all Jobs are reroutable.
@@ -113,3 +133,4 @@ Everyone interacting in the Sidekiq::Rerouting project's codebases, issue tracke
 [sidekiq]: https://sidekiq.org "Simple, efficient background jobs for Ruby."
 [sidekiq-disposal]: https://github.com/hibachrach/sidekiq-disposal "A Sidekiq extension to mark Sidekiq jobs to be disposed of."
 [sidekiq-register-middleware]: https://github.com/sidekiq/sidekiq/wiki/Middleware#registering-middleware "Registering Sidekiq Middleware"
+[job-format]: https://github.com/sidekiq/sidekiq/wiki/Job-Format "How Sidekiq jobs are serialized"
