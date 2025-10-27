@@ -1,6 +1,6 @@
 # Sidekiq::Rerouting
 
-[![CI](https://github.com/hibachrach/sidekiq-disposal/actions/workflows/main.yml/badge.svg)](https://github.com/hibachrach/sidekiq-disposal/actions)
+[![CI](https://github.com/hibachrach/sidekiq-rerouting/actions/workflows/main.yml/badge.svg)](https://github.com/hibachrach/sidekiq-rerouting/actions)
 
 A [Sidekiq][sidekiq] extension to set Sidekiq jobs to be rerouted to a different queue based on the job ID or job class.
 
@@ -23,7 +23,7 @@ gem install sidekiq-rerouting
 From a console (Rails console, or the like) you need a `Sidekiq::Rerouting::Client` instance, which is used to `#reroute` a job, or job class to be disposed.
 
 ```ruby
-client = Sidekiq::Disposal::Client.new
+client = Sidekiq::Rerouting::Client.new
 ```
 
 ### Marking to reroute
@@ -38,14 +38,19 @@ client.reroute("different_queue", :jid, some_job_id)
 client.reroute("different_queue", :class, "SomeJobClass")
 ```
 
-A job or job class can also be removed from rerouting for disposal via a corresponding API.
+A job or job class can also be removed from rerouting via a corresponding API. This only takes effects for jobs enqueued after the API call.
+Reroute the jobs back to its original queue to affect the previously rerouted jobs still in the queue.
 
 ```ruby
 # Unmark a specific Job to be rerouted by specifying its job ID
-client.remove_rerouting("different_queue", :jid, some_job_id)
+client.remove_rerouting(:jid, some_job_id)
 
 # Unmark an entire job class to be rerouted
-client.remove_rerouting("different_queue", :class, "SomeJobClass")
+client.remove_rerouting(:class, "SomeJobClass")
+
+# Force previously rerouted job class/jid to its original queue
+client.reroute("original_queue", :jid, some_job_id)
+client.reroute("original_queue", :class, "SomeJobClass")
 ```
 
 ### Clearing all rerouting
@@ -88,9 +93,10 @@ end
 ```
 
 It yields the following keyword arguments:
-* `job`: the serialized job that is being rerouted; see [Sidekiq's docs][job-format] for more details.
-* `old_queue`: the queue *from which* the job is being rerouted.
-* `new_queue`: the queue *to which* the job is being rerouted.
+
+- `job`: the serialized job that is being rerouted; see [Sidekiq's docs][job-format] for more details.
+- `old_queue`: the queue _from which_ the job is being rerouted.
+- `new_queue`: the queue _to which_ the job is being rerouted.
 
 ### Non-Reroutable Jobs
 
