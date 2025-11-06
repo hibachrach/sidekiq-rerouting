@@ -42,10 +42,10 @@ A job or job class can also be removed from rerouting via a corresponding API. T
 Reroute the jobs back to its original queue to affect the previously rerouted jobs still in the queue.
 
 ```ruby
-# Unmark a specific Job to be rerouted by specifying its job ID
+# Unmark a specific Job for rerouting by specifying its job ID
 client.remove_rerouting(:jid, some_job_id)
 
-# Unmark an entire job class to be rerouted
+# Unmark an entire job class for rerouting
 client.remove_rerouting(:class, "SomeJobClass")
 
 # Force previously rerouted job class/jid to its original queue
@@ -116,7 +116,7 @@ No extra Redis calls, no funny business.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 

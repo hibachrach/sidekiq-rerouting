@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-require "sidekiq/rerouting"
+require "debug/prelude"
 require "sidekiq/testing"
+
+require_relative "../lib/sidekiq/rerouting"
 require_relative "support/test_redis_server"
 
 # Initialize the Sidekiq client to use our test-specific Redis, rather than

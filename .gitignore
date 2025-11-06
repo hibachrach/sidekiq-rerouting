@@ -19,13 +19,9 @@
 /Gemfile.lock
 
 # Spec housekeeping
-/spec/rspec-status.txt
-/spec/reports
-
 /coverage/
 /doc/
 /spec/reports/
 
 # rspec failure tracking
-.rspec_status
-
+/spec/rspec-status.txt

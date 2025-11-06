@@ -28,10 +28,12 @@ module Sidekiq
       end
 
       it "enqueues the job, exits early, and calls the `on_reroute` callback if job class has been marked for rerouting" do
-        Client.new.reroute("a_different_queue", :class, ServerMiddlewareTestCustomJob.name)
+        client.reroute("a_different_queue", :class, ServerMiddlewareTestCustomJob.name)
+
         middleware.call(ServerMiddlewareTestCustomJob.new, serialized_job, "within_50_years") do
           job_perform_sentinel.blah
         end
+
         expect(on_reroute_sentinel).to have_received(:call).with(job: serialized_job, old_queue: "within_50_years",
           new_queue: "a_different_queue")
         expect(job_perform_sentinel).not_to have_received(:blah)
@@ -46,10 +48,12 @@ module Sidekiq
           ServerMiddlewareTestNonReroutableJob.perform_async("foo", 2, "baz")
           ServerMiddlewareTestNonReroutableJob.jobs.first
         end
-        Client.new.reroute("a_different_queue", :class, ServerMiddlewareTestNonReroutableJob.name)
+        client.reroute("a_different_queue", :class, ServerMiddlewareTestNonReroutableJob.name)
+
         middleware.call(ServerMiddlewareTestNonReroutableJob.new, serialized_job, "within_50_years") do
           job_perform_sentinel.blah
         end
+
         expect(on_reroute_sentinel).not_to have_received(:call)
         expect(job_perform_sentinel).to have_received(:blah)
         expect(Sidekiq::Queues["a_different_queue"]).to be_empty
