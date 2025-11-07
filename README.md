@@ -98,6 +98,19 @@ It yields the following keyword arguments:
 - `old_queue`: the queue _from which_ the job is being rerouted.
 - `new_queue`: the queue _to which_ the job is being rerouted.
 
+### Sidekiq Pro Batches
+
+If you're using [Sidekiq Pro's Batch feature][sidekiq-batches] you need to be sure to insert the rerouting middleware _after_ the `Batch` middleware.
+This will ensure the batch can be re-opened, and the rereouted job added to it.
+
+```ruby
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.insert_after(Sidekiq::Batch::Server, Sidekiq::Rerouting::ServerMiddleware)
+  end
+end
+```
+
 ### Non-Reroutable Jobs
 
 By default all Jobs are reroutable.
@@ -137,6 +150,7 @@ Everyone interacting in the Sidekiq::Rerouting project's codebases, issue tracke
 - [`sidekiq-disposal`][sidekiq-disposal]
 
 [sidekiq]: https://sidekiq.org "Simple, efficient background jobs for Ruby."
+[sidekiq-batches]: https://github.com/sidekiq/sidekiq/wiki/Batches "Sidekiq Pro Batches"
 [sidekiq-disposal]: https://github.com/hibachrach/sidekiq-disposal "A Sidekiq extension to mark Sidekiq jobs to be disposed of."
 [sidekiq-register-middleware]: https://github.com/sidekiq/sidekiq/wiki/Middleware#registering-middleware "Registering Sidekiq Middleware"
 [job-format]: https://github.com/sidekiq/sidekiq/wiki/Job-Format "How Sidekiq jobs are serialized"
