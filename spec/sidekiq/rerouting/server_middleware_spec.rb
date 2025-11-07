@@ -63,6 +63,7 @@ module Sidekiq
         middleware.call(ServerMiddlewareTestCustomJob.new, serialized_job, "within_50_years") do
           job_perform_sentinel.blah
         end
+
         expect(on_reroute_sentinel).not_to have_received(:call)
         expect(job_perform_sentinel).to have_received(:blah)
         expect(Sidekiq::Queues["a_different_queue"]).to be_empty
