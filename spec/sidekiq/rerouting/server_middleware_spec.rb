@@ -29,18 +29,16 @@ module Sidekiq
 
       it "enqueues the job, exits early, and calls the `on_reroute` callback if job class has been marked for rerouting" do
         client.reroute("a_different_queue", :class, ServerMiddlewareTestCustomJob.name)
+        expected_job = serialized_job.dup.merge("queue" => "a_different_queue")
 
         middleware.call(ServerMiddlewareTestCustomJob.new, serialized_job, "within_50_years") do
           job_perform_sentinel.blah
         end
 
-        expect(on_reroute_sentinel).to have_received(:call).with(job: serialized_job, old_queue: "within_50_years",
+        expect(on_reroute_sentinel).to have_received(:call).with(job: expected_job, old_queue: "within_50_years",
           new_queue: "a_different_queue")
         expect(job_perform_sentinel).not_to have_received(:blah)
-        expected_job = serialized_job.dup.tap do |j|
-          j["queue"] = "a_different_queue"
-        end
-        expect(Sidekiq::Queues["a_different_queue"]).to eq([expected_job])
+        expect(Sidekiq::Queues["a_different_queue"]).to contain_exactly(expected_job)
       end
 
       it "just yields if job has been designated as non-reroutable" do

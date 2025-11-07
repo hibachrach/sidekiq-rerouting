@@ -15,14 +15,22 @@ module Sidekiq
         job_instance && job_instance.class.get_sidekiq_options.fetch("reroutable", true)
       end
 
-      def rerouted_destination
-        return @rerouted_destination if defined?(@rerouted_destination)
-
-        @rerouted_destination = client.rerouting_destination(job_payload)
+      def rerouted_from?(queue:)
+        rerouted_queue && rerouted_queue != queue
       end
 
-      def rerouted_from?(queue:)
-        rerouted_destination && rerouted_destination != queue
+      def rerouted_playload
+        job_payload.merge("queue" => rerouted_queue)
+      end
+
+      def rerouted_queue
+        return @rerouted_queue if defined?(@rerouted_queue)
+
+        @rerouted_queue = client.rerouting_destination(job_payload)
+      end
+
+      def original_queue
+        job_payload["queue"]
       end
 
       private

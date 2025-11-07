@@ -18,9 +18,7 @@ module Sidekiq
         job = ReroutingJob.new(job_instance:, job_payload:, client:)
 
         if job.reroutable? && job.rerouted_from?(queue:)
-          job_instance.class.client_push(job_payload.merge("queue" => job.rerouted_destination))
-
-          on_reroute&.call(job: job_payload, old_queue: queue, new_queue: job.rerouted_destination)
+          reroute(sidekiq_client: job_instance.class, job: job)
         else
           yield
         end
@@ -29,6 +27,12 @@ module Sidekiq
       private
 
       attr_reader :client, :on_reroute
+
+      def reroute(sidekiq_client:, job:)
+        sidekiq_client.client_push(job.rerouted_playload)
+
+        on_reroute&.call(job: job.rerouted_playload, old_queue: job.original_queue, new_queue: job.rerouted_queue)
+      end
     end
   end
 end

@@ -28,7 +28,7 @@ module Sidekiq
         end
       end
 
-      describe "#rerouted_destination", :with_test_redis do
+      describe "#rerouted_queue", :with_test_redis do
         let(:job) { ReroutingJob.new(job_instance: ReroutingJobTestJob.new, job_payload: payload, client: client) }
         let(:client) { Client.new }
         let(:payload) do
@@ -39,14 +39,14 @@ module Sidekiq
         it "pulls the rerouted destination from redis" do
           client.reroute("new_queue", :class, ReroutingJobTestJob.name)
 
-          expect(job.rerouted_destination).to eq("new_queue")
+          expect(job.rerouted_queue).to eq("new_queue")
         end
 
         it "caches the rerouted destination" do
           allow(client).to receive(:rerouting_destination).with(payload) { nil }
 
-          expect(job.rerouted_destination).to be_nil
-          expect(job.rerouted_destination).to be_nil
+          expect(job.rerouted_queue).to be_nil
+          expect(job.rerouted_queue).to be_nil
           expect(client).to have_received(:rerouting_destination).once
         end
       end
