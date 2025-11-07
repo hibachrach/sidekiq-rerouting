@@ -18,7 +18,9 @@ module Sidekiq
         job = ReroutingJob.new(job_instance:, job_payload:, client:)
 
         if job.reroutable? && job.rerouted_from?(queue:)
-          reroute(sidekiq_client: job_instance.class, job: job)
+          job.within_batch_maybe do
+            reroute(sidekiq_client: job_instance.class, job: job)
+          end
         else
           yield
         end

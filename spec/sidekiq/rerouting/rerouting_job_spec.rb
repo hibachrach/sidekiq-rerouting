@@ -52,25 +52,55 @@ module Sidekiq
       end
 
       describe "#rerouted_from?" do
-        let(:job) { ReroutingJob.new(job_instance: ReroutingJobTestJob.new, job_payload: payload, client: client) }
-        let(:payload) { {} }
+        let(:job) { ReroutingJob.new(job_instance: ReroutingJobTestJob.new, job_payload:, client:) }
+        let(:job_payload) { {} }
 
         it "is true if the rerouted destination differs from the current queue" do
-          allow(client).to receive(:rerouting_destination).with(payload) { "different_queue" }
+          allow(client).to receive(:rerouting_destination).with(job_payload) { "different_queue" }
 
           expect(job).to be_rerouted_from(queue: "original_queue")
         end
 
         it "is false if the rerouted destination is the same as the current queue" do
-          allow(client).to receive(:rerouting_destination).with(payload) { "original_queue" }
+          allow(client).to receive(:rerouting_destination).with(job_payload) { "original_queue" }
 
           expect(job).not_to be_rerouted_from(queue: "original_queue")
         end
 
         it "is false if there is no rerouted destination" do
-          allow(client).to receive(:rerouting_destination).with(payload) { nil }
+          allow(client).to receive(:rerouting_destination).with(job_payload) { nil }
 
           expect(job).not_to be_rerouted_from(queue: "original_queue")
+        end
+      end
+
+      describe "within_batch_maybe" do
+        let(:job) { ReroutingJob.new(job_instance: ReroutingJobTestJob.new, job_payload:, client:, batch_api:) }
+        let(:job_payload) { {} }
+        let(:batch_api) { instance_double(BatchAPI, jobs_in: :ok) }
+
+        it "yields directly if there is no batch ID" do
+          yielded = false
+          job.within_batch_maybe do
+            yielded = true
+          end
+
+          expect(yielded).to be true
+          expect(batch_api).not_to have_received(:jobs_in)
+        end
+
+        it "defers to the BatchAPI if there is a batch ID" do
+          bid = "some_batch_id"
+          job_payload["bid"] = bid
+          allow(batch_api).to receive(:jobs_in).with(batch: bid).and_yield
+
+          yielded = false
+          job.within_batch_maybe do
+            yielded = true
+          end
+
+          expect(yielded).to be true
+          expect(batch_api).to have_received(:jobs_in).with(batch: "some_batch_id")
         end
       end
     end
