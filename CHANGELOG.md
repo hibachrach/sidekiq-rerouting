@@ -2,6 +2,8 @@
 
 ## [Unreleased]:
 
+## [0.3.0]: 2025-11-10
+
 - Added support for Sidekiq Pro's Batch feature.
 - **Breaking**: the `on_reroute` callback's `job` parameter is now the rerouted job instead of the original job.
     Meaning the `job["queue"]` will be the rerouted queue, not the original queue.
