@@ -5,7 +5,7 @@ require_relative "batch_api"
 
 module Sidekiq
   module Rerouting
-    class ReroutingJob
+    class Router
       def initialize(job_instance:, job_payload:, client: Client.new, batch_api: BatchAPI.new)
         @batch_api = batch_api
         @client = client

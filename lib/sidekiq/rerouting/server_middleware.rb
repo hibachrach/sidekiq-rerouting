@@ -2,7 +2,7 @@
 
 require "sidekiq"
 require_relative "../rerouting"
-require_relative "rerouting_job"
+require_relative "router"
 
 module Sidekiq
   module Rerouting
@@ -15,11 +15,11 @@ module Sidekiq
       end
 
       def call(job_instance, job_payload, queue)
-        job = ReroutingJob.new(job_instance:, job_payload:, client:)
+        router = Router.new(job_instance:, job_payload:, client:)
 
-        if job.reroutable? && job.rerouted_from?(queue:)
-          job.within_batch_maybe do
-            reroute(sidekiq_client: job_instance.class, job: job)
+        if router.reroutable? && router.rerouted_from?(queue:)
+          router.within_batch_maybe do
+            reroute(sidekiq_client: job_instance.class, router: router)
           end
         else
           yield
@@ -30,10 +30,10 @@ module Sidekiq
 
       attr_reader :client, :on_reroute
 
-      def reroute(sidekiq_client:, job:)
-        sidekiq_client.client_push(job.rerouted_playload)
+      def reroute(sidekiq_client:, router:)
+        sidekiq_client.client_push(router.rerouted_playload)
 
-        on_reroute&.call(job: job.rerouted_playload, old_queue: job.original_queue, new_queue: job.rerouted_queue)
+        on_reroute&.call(job: router.rerouted_playload, old_queue: router.original_queue, new_queue: router.rerouted_queue)
       end
     end
   end
